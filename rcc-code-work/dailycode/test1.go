@@ -2,48 +2,43 @@ package main
 
 import (
 	"fmt"
-	"reflect"
+	"sync"
 	"time"
+	_ "time"
 )
 
-type User struct {
-	Name string
-	Age  int
+var w sync.WaitGroup
+
+func test1() {
+	for i := range 10 {
+		fmt.Println("test1", i)
+	}
+	w.Done()
+}
+
+func test2() {
+	for i := range 10 {
+		fmt.Println("test2", i)
+	}
+	w.Done()
 }
 
 func main() {
-	user := User{Name: "Easy", Age: 33}
-	userType := reflect.TypeOf(user)
-	fmt.Println(userType.Name()) // 输出结构体的名称
-	fmt.Println(userType.Kind()) // 输出结构体的种类
+	w.Add(1)
+	go test1()
 
-	reflectValue := reflect.ValueOf(user)
-	fmt.Println(reflectValue)
+	w.Add(1)
+	go test2()
 
-	for i := 0; i < userType.NumField(); i++ {
-		field := userType.Field(i)
-		value := reflectValue.Field(i).Interface()
-		fmt.Printf("Field Name: %s, Field Type: %s, Field Value: %v\n", field.Name, field.Type, value)
-	}
+	w.Wait()
 
-	u1 := reflect.New(userType).Elem() // 创建一个新的实例
-	u1.FieldByName("Name").SetString("John")
-	u1.FieldByName("Age").SetInt(25) // 设置字段值
-	fmt.Println(u1.Interface())      // 输出: {John 25}
+	fmt.Println("main out")
 
-	ch := make(chan int, 3)
-
+	ch := make(chan int)
 	go func() {
-		for i := 0; i < 3; i++ {
-			ch <- i
+		for {
+			time.Sleep(1 * time.Second) // 未阻塞，周期性唤醒
 		}
-		// close(ch)
-		fmt.Println("Channel closed in goroutine")
 	}()
-
-	time.Sleep(time.Second)
-
-	for c := range ch {
-		fmt.Println(c)
-	}
+	<-ch // 主 goroutine 阻塞
 }
