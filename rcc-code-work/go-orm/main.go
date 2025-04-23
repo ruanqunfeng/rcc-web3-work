@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"gorm.io/gorm/schema"
@@ -76,10 +77,10 @@ func main() {
 	// 	}
 	// }
 
-	// var syss []SysConfig
-	// syss = make([]SysConfig, 0)
-	// db.Table("sys_config").Where("config_key is not null").Scan(&syss)
-	// fmt.Println(syss)
+	var syss []SysConfig
+	syss = make([]SysConfig, 0)
+	db.Table("sys_config").Where("config_key is not null").Find(&syss)
+	fmt.Println(syss)
 	// fmt.Println(sys)
 
 	// tx := db.Table("sys_config").Where("id is not null")
@@ -109,22 +110,27 @@ func main() {
 	// syss = append(syss, SysConfig{ID: 14, ConfigValue: "14"})
 	// db.Table("sys_config").Model(&SysConfig{}).Where("id = ?", 14).Update("status", 1)
 	// db.Table("sys_config").Model(&SysConfig{}).Where("id = ?", 14).Updates(map[string]interface{}{"config_value": "17", "description": "17"})
-	db.Transaction(func(tx *gorm.DB) error {
-		var sys SysConfig
-		tx.Table("sys_config").Where("id = ?", 14).Find(&sys)
-		sys.ConfigValue = "18"
-		tx.Table("sys_config").Save(&sys)
+	// db.Transaction(func(tx *gorm.DB) error {
+	// 	var sys SysConfig
+	// 	tx.Table("sys_config").Where("id = ?", 14).Find(&sys)
+	// 	sys.ConfigValue = "18"
+	// 	tx.Table("sys_config").Save(&sys)
 
-		if err := tx.Table("sys_config").Where("id = ?", 16).Update("config_key", "15").Error; err != nil {
-			return err // 触发回滚
-		}
-		return nil
-	})
+	// 	if err := tx.Table("sys_config").Where("id = ?", 16).Update("config_key", "15").Error; err != nil {
+	// 		return err // 触发回滚
+	// 	}
+	// 	return nil
+	// })
 
-	db.CreateInBatches([]SysConfig{
-		{ConfigKey: "1", ConfigValue: "1", Description: "1", Status: 1, CreateTime: time.Now(), UpdateTime: time.Now()},
-		{ConfigKey: "2", ConfigValue: "2", Description: "2", Status: 1, CreateTime: time.Now(), UpdateTime: time.Now()},
-	}, 2)
+	// db.CreateInBatches([]SysConfig{
+	// 	{ConfigKey: "1", ConfigValue: "1", Description: "1", Status: 1, CreateTime: time.Now(), UpdateTime: time.Now()},
+	// 	{ConfigKey: "2", ConfigValue: "2", Description: "2", Status: 1, CreateTime: time.Now(), UpdateTime: time.Now()},
+	// }, 2)
+}
+
+func (s *SysConfig) AfterFind(tx *gorm.DB) (err error) {
+	fmt.Printf("配置 %s 查询成功\n", s.ConfigKey)
+	return
 }
 
 func KeyIsNotNull(tx *gorm.DB) *gorm.DB {
