@@ -43,11 +43,11 @@ func main() {
 	// queryContractData(client)
 
 	// 3. 查询区块数据
-	queryBlockByNumber(client, 1234567)
+	// queryBlockByNumber(client, 1234567)
 	// queryBlockByHash(client, common.HexToHash("0x52612df6e27a87b5e305c2d34058b933ebfc0e33521822a4468f2b5a48364fe0"))
 
 	// 4. 查询交易
-	// queryTransaction(client, common.HexToHash("0x3d90668565b1ffb7a7c0a0c78a3ceafe1e6351cbc0cc1de1b974fb937c43890f"))
+	queryTransaction(client, common.HexToHash("0x3d90668565b1ffb7a7c0a0c78a3ceafe1e6351cbc0cc1de1b974fb937c43890f"))
 
 	// 5. 查询收据
 	// queryReceipt(client, common.HexToHash("0x..."))
@@ -234,8 +234,8 @@ func queryTransaction(client *ethclient.Client, txHash common.Hash) {
 		log.Fatal(err)
 	}
 
-	singer := types.NewEIP155Signer(tx.ChainId())
-	from, err := types.Sender(singer, tx)
+	signer := types.LatestSignerForChainID(tx.ChainId())
+	from, err := types.Sender(signer, tx)
 	if err != nil {
 		log.Fatal("获取发送方失败:", err)
 	}
