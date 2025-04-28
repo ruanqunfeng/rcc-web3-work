@@ -42,9 +42,35 @@ func ParseBLockNumber(s string) (int64, error) {
 	return number, err
 }
 
+var (
+	myMap = make(map[int]uint, 200)
+)
+
+func test(n int, ch chan uint, exitChan chan bool) {
+	sum := uint(1)
+	for i := 1; i <= n; i++ {
+		sum *= uint(i)
+	}
+	ch <- sum
+	exitChan <- true
+}
+
 func main() {
 
-	s := "0xde2395eddf141f9592c5efff421bf5628b3246ab3680d1d74eaccae6d226588e"
-	fmt.Println(len(s))
+	c1 := make(chan uint, 49)
+	exitChan := make(chan bool, 1)
 
+	for i := 2; i <= 50; i++ {
+		go test(i, c1, exitChan)
+	}
+
+	for i := 2; i <= 50; i++ {
+		<-exitChan
+	}
+
+	close(c1)
+
+	for sum := range c1 {
+		fmt.Println(sum)
+	}
 }

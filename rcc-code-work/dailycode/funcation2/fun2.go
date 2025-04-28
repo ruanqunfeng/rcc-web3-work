@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"reflect"
+	"time"
 )
 
 func reflectTest01(b interface{}) {
@@ -49,35 +51,26 @@ func reflectTest02(b interface{}) {
 	}
 }
 
-func reflectTest03(b any) {
-	v := reflect.ValueOf(b)
-	k := v.Kind()
-
-	switch k {
-	case reflect.Int:
-		fmt.Println("int类型")
-	case reflect.Int8:
-		fmt.Println("int8类型")
-	case reflect.Chan:
-		fmt.Println("chan类型")
-	default:
-		fmt.Println("其他类型")
-	}
-}
-
 func main() {
-	// var num int = 100
-	// reflectTest01(num)
-
-	// stu := Student{Name: "tome", Age: 18}
-	// reflectTest02(stu)
-
-	// reflectTest02(func(a int) func(int) int {
-	// 	a++
-	// 	return func(b int) int {
-	// 		return a + b
-	// 	}
-	// })
-
-	reflectTest03(100)
+	ctx, cancel := context.WithCancel(context.Background())
+	go watch(ctx, "【监控1】")
+	go watch(ctx, "【监控2】")
+	go watch(ctx, "【监控3】")
+	time.Sleep(10 * time.Second)
+	fmt.Println("可以了，通知监控停止")
+	cancel()
+	//为了检测监控过是否停止，如果没有监控输出，就表示停止了
+	time.Sleep(5 * time.Second)
+}
+func watch(ctx context.Context, name string) {
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Println(name, "监控退出，停止了...")
+			return
+		default:
+			fmt.Println(name, "goroutine监控中...")
+			time.Sleep(2 * time.Second)
+		}
+	}
 }
