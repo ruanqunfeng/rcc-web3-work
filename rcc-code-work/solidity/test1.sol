@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 contract Hello3Dot1 {
 
+    bytes10 bs = unicode"中国龙1";
+
     // 基本类型，存储在Stack中
     int public x = 1;
 
@@ -41,7 +43,6 @@ contract Hello3Dot1 {
         persons.push(Person(age, name1));
     }
 
-    bytes public bs = "Hello3Dot1";
     function getBs(uint256 i) public view returns (bytes1) {
         return bs[i];
     }
