@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
+	"testing"
 
 	"github.com/ethereum/go-ethereum/rpc"
 )
@@ -57,20 +59,56 @@ func test(n int, ch chan uint, exitChan chan bool) {
 
 func main() {
 
-	c1 := make(chan uint, 49)
-	exitChan := make(chan bool, 1)
+	// c1 := make(chan uint, 49)
+	// exitChan := make(chan bool, 1)
 
-	for i := 2; i <= 50; i++ {
-		go test(i, c1, exitChan)
+	// for i := 2; i <= 50; i++ {
+	// 	go test(i, c1, exitChan)
+	// }
+
+	// for i := 2; i <= 50; i++ {
+	// 	<-exitChan
+	// }
+
+	// close(c1)
+
+	// for sum := range c1 {
+	// 	fmt.Println(sum)
+	// }
+
+	m := make(map[any]any, 20)
+	m[1] = 2
+
+	arr := []int{1, 2, 3}
+	m[arr] = 3
+
+	fmt.Println(m)
+}
+
+func TestReflectFunc(t *testing.T) {
+	call1 := func(v1, v2 int) {
+		t.Log(v1, v2)
 	}
 
-	for i := 2; i <= 50; i++ {
-		<-exitChan
+	call2 := func(v1, v2 int, s string) {
+		t.Log(v1, v2, s)
 	}
 
-	close(c1)
+	var (
+		function reflect.Value
+		inValue  []reflect.Value
+		n        int
+	)
 
-	for sum := range c1 {
-		fmt.Println(sum)
+	bridge := func(call interface{}, args ...interface{}) {
+		n = len(args)
+		inValue = make([]reflect.Value, n)
+		for i := 0; i < n; i++ {
+			inValue[i] = reflect.ValueOf(args[i])
+		}
+		function = reflect.ValueOf(call)
+		function.Call(inValue)
 	}
+	bridge(call1, 1, 2)
+	bridge(call2, 1, 2, "test2")
 }
