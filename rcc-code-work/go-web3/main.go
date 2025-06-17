@@ -8,18 +8,22 @@ import (
 	"log"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	"rcc-code-work/abi"
 )
 
 var (
-	rpcURL        = "wss://sepolia.gateway.tenderly.co"          //"https://ethereum-sepolia-rpc.publicnode.com"                      // 替换为你的节点URL
-	privateKeyHex = ""                                           // 替换为你的私钥
-	contractAddr  = common.HexToAddress("0xCONTRACT_ADDRESS")    // 合约地址
-	ethAddress    = "0x4aFc74781822F4B1eCa779312458b7EE75D7B69a" // 替换为你的以太坊地址
+	// https://eth-sepolia.g.alchemy.com/v2/9eVKAP-8NRjwbkKNh24ztpntkdo9KQ79
+	rpcURL        = "wss://sepolia.gateway.tenderly.co"                               //"https://ethereum-sepolia-rpc.publicnode.com"                      // 替换为你的节点URL
+	privateKeyHex = ""                                                                // 替换为你的私钥
+	contractAddr  = common.HexToAddress("0x8c14c7fcb84d659b5b02c8a39065f5127266c1a0") // ABI合约地址
+	ethAddress    = "0x4aFc74781822F4B1eCa779312458b7EE75D7B69a"                      // 替换为你的以太坊地址
 )
 
 func main() {
@@ -33,7 +37,7 @@ func main() {
 	// createAddress()
 
 	// 查询余额
-	// queryBalance(client, ethAddress)
+	// queryBalance(client, "0x8c14c7fcb84d659b5b02c8a39065f5127266c1a0")
 
 	// 示例调用各个功能
 	// 1. 发起转账交易
@@ -47,13 +51,13 @@ func main() {
 	// queryBlockByHash(client, common.HexToHash("0x52612df6e27a87b5e305c2d34058b933ebfc0e33521822a4468f2b5a48364fe0"))
 
 	// 4. 查询交易
-	queryTransaction(client, common.HexToHash("0x3d90668565b1ffb7a7c0a0c78a3ceafe1e6351cbc0cc1de1b974fb937c43890f"))
+	// queryTransaction(client, common.HexToHash("0x3d90668565b1ffb7a7c0a0c78a3ceafe1e6351cbc0cc1de1b974fb937c43890f"))
 
 	// 5. 查询收据
 	// queryReceipt(client, common.HexToHash("0x..."))
 
 	// 6. 查询合约事件
-	// queryContractEvents(client)
+	queryContractEvents(client)
 
 	// 7. 订阅合约事件
 	// subscribeContractEvents(client)
@@ -160,36 +164,30 @@ func sendTransaction(client *ethclient.Client) {
 }
 
 // 2. 查询合约数据（需要ABI）
-// func queryContractData(client *ethclient.Client) {
-// 	// 示例：查询ERC20余额
-// 	contractABI, err := abi.JSON(strings.NewReader(erc20ABI))
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+func queryContractData(client *ethclient.Client) {
+	instance, err := abi.NewAbi(contractAddr, client)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 	data, err := contractABI.Pack("balanceOf", common.HexToAddress("0x..."))
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	// 4. 准备调用参数
+	x := big.NewInt(10)
+	y := big.NewInt(20)
+	m := big.NewInt(7)
 
-// 	msg := ethereum.CallMsg{
-// 		To:   &contractAddr,
-// 		Data: data,
-// 	}
+	// 5. 创建调用选项
+	callOpts := &bind.CallOpts{}
 
-// 	result, err := client.CallContract(context.Background(), msg, nil)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	// 6. 调用 mathTest 方法
+	addmodResult, mulmodResult, err := instance.MathTest(callOpts, x, y, m)
+	if err != nil {
+		log.Fatal("调用失败:", err)
+	}
 
-// 	var balance *big.Int
-// 	err = contractABI.UnpackIntoInterface(&balance, "balanceOf", result)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	fmt.Println("Balance:", balance)
-// }
+	// 7. 输出结果
+	fmt.Printf("AddMod 结果: %s\n", addmodResult.String())
+	fmt.Printf("MulMod 结果: %s\n", mulmodResult.String())
+}
 
 // 3. 查询区块数据（通过区块高度）
 func queryBlockByNumber(client *ethclient.Client, blockNumber int64) {
@@ -296,31 +294,32 @@ func queryReceipt(client *ethclient.Client, txHash common.Hash) *types.Receipt {
 }
 
 // 6. 查询合约事件
-// func queryContractEvents(client *ethclient.Client) {
-// 	contractABI, err := abi.JSON(strings.NewReader(erc20ABI))
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+func queryContractEvents(client *ethclient.Client) {
+	contractAddress := common.HexToAddress("0xbec89ab25ffde1e43b1c91c2252567ce8404eb6b")
+	instance, err := abi.NewEventTest(contractAddress, client)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 	// 创建查询过滤器
-// 	query := ethereum.FilterQuery{
-// 		FromBlock: big.NewInt(1000000),
-// 		ToBlock:   big.NewInt(1001000),
-// 		Addresses: []common.Address{contractAddr},
-// 		Topics: [][]common.Hash{{
-// 			contractABI.Events["Transfer"].ID, // 事件签名
-// 		}},
-// 	}
+	endBlock := uint64(8272099)
 
-// 	logs, err := client.FilterLogs(context.Background(), query)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	// 查询历史事件
+	filterOpts := &bind.FilterOpts{
+		Start: 8272080,   // 起始区块号
+		End:   &endBlock, // 结束区块号（nil表示最新区块）
+	}
 
-// 	for _, log := range logs {
-// 		fmt.Printf("Log: %+v\n", log)
-// 	}
-// }
+	events, err := instance.FilterMyevent(filterOpts)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for events.Next() {
+		event := events.Event
+		fmt.Printf("事件描述: %s\n", event.Description)
+		fmt.Printf("区块号: %d\n", event.Raw.BlockNumber)
+	}
+}
 
 // 7. 订阅合约事件
 // func subscribeContractEvents(client *ethclient.Client) {

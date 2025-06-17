@@ -1,10 +1,14 @@
 package main
 
 import (
+	"cmp"
+	"context"
 	"fmt"
 	"reflect"
+	"slices"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/rpc"
 )
@@ -59,30 +63,57 @@ func test(n int, ch chan uint, exitChan chan bool) {
 
 func main() {
 
-	// c1 := make(chan uint, 49)
-	// exitChan := make(chan bool, 1)
+	// ch := make(chan struct{})
 
-	// for i := 2; i <= 50; i++ {
-	// 	go test(i, c1, exitChan)
+	// go func() {
+	// 	close(ch)
+	// }()
+
+	// time.Sleep(time.Second)
+	// <-ch
+	// <-ch
+	// <-ch
+	// fmt.Println("main done")
+
+	// s := []int{1, 2, 3}
+	// for _, v := range s {
+	// 	s = append(s, v)
+	// 	fmt.Printf("len(s)=%v\n", len(s))
+	// }
+	// m := make(map[int]any)
+	// m[1] = 1
+	// m[2] = 2
+	// m[3] = 3
+	// keys := SortMapByKey(m)
+	// for _, k := range keys {
+	// 	fmt.Println(k)
 	// }
 
-	// for i := 2; i <= 50; i++ {
-	// 	<-exitChan
-	// }
+	// fmt.Println(runtime.NumCPU())
 
-	// close(c1)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	select {
+	case <-time.After(2 * time.Second):
+		fmt.Println("Work done")
+	case <-ctx.Done():
+		fmt.Println("Timeout:", ctx.Err()) // 输出: context deadline exceeded
+	}
 
-	// for sum := range c1 {
-	// 	fmt.Println(sum)
-	// }
+	ctx = context.WithValue(context.Background(), "user", "Alice")
+	if user, ok := ctx.Value("user").(string); ok {
+		fmt.Println("User:", user) // 输出: User: Alice
+	}
+}
 
-	m := make(map[any]any, 20)
-	m[1] = 2
-
-	arr := []int{1, 2, 3}
-	m[arr] = 3
-
-	fmt.Println(m)
+// T 必须是可排序的类型（如 int、string 等）。
+func SortMapByKey[T cmp.Ordered](mp map[T]any) []T {
+	arr := make([]T, 0, len(mp))
+	for k := range mp {
+		arr = append(arr, k)
+	}
+	slices.Sort(arr)
+	return arr
 }
 
 func TestReflectFunc(t *testing.T) {
